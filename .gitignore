@@ -1,0 +1,13 @@
+auto/
+*.aux
+*.bcf
+*.log
+*.bcf
+*.nav
+*.out
+*.run.xml
+*.snm
+*.toc
+*.vrb
+*.DS_Store
+*~
