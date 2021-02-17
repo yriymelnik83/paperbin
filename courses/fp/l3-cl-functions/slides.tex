@@ -1,0 +1,298 @@
+\documentclass{beamer}
+
+\usepackage{amsmath}
+\usepackage[style=alphabetic,url=true]{biblatex}
+\usepackage{environ}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{calrsfs}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[cache=false]{minted}
+
+\graphicspath{ {./graphics/} }
+\usetikzlibrary{shapes.arrows,chains}
+\usecolortheme{beaver}
+\setbeamertemplate{itemize item}[circle]
+\setbeamertemplate{itemize subitem}{--}
+\addtobeamertemplate{navigation symbols}{}{
+  \usebeamerfont{footline}
+  \usebeamercolor[fg]{footline}
+  \hspace{1em}
+  \insertframenumber/\inserttotalframenumber
+}
+\setminted[Lisp]{
+  fontsize=\scriptsize
+}
+\BeforeBeginEnvironment{minted}{\medskip}
+\AfterEndEnvironment{minted}{\medskip}
+
+
+
+\title{
+  Common Lisp and Introduction to Functional Programming \\
+  Lecture 3: Common Lisp Functions and Variables
+}
+\author{Yuri Zhykin}
+\date{Feb 17, 2021}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}[fragile]
+  \frametitle{Function Definitions}
+  \begin{itemize}
+  \item Functions in Common Lisp are defined with \mintinline{Lisp}{defun} form:
+\begin{minted}{Lisp}
+  (defun <function-name> <parameter-list> <docstring>? <body>)
+\end{minted}
+  \item Example:
+\begin{minted}{Lisp}
+  (defun greet (name formally?)
+    "Print a greeting for the given `name`, either formal
+or informal one, depending on the value of `formally?`."
+    (if formally?
+        (format t "Good morning, ~a.~%" name) 
+        (format t "What's up, ~a!~%" name)))
+
+  (greet "Mr. Holmes" t)
+  ;; Good morning, Mr. Holmes.
+  (greet "Mike" nil)
+  ;; What's up, Mike!
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{$\lambda$-lists 1/4}
+  \begin{itemize}
+  \item Parameter lists in Common Lisp function definitions are called
+    $\lambda$-lists (or lambda-lists).
+  \item Regular symbols in $\lambda$-lists represent required parameters -
+    missing required arguments cause an error to be signaled:
+\begin{minted}{Lisp}
+  (defun f (x y z) ; x, y, z are parameters
+    (* x (+ y z)))
+
+  (f 1 2) ; 1, 2 are arguments for x, y; argument for z is missing
+  ;; Error: f got 2 args, wanted 3 args.
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{$\lambda$-lists 2/4}
+  \begin{itemize}
+  \item \textbf{Optional parameters} are parameters that have default value and
+    do not have to be provided.
+  \item Optional parameters are positional: in order to provide an optional
+    argument, all previous ones have to be included.
+  \item Optional parameters are separated from the required ones with the special
+    symbol \mintinline{Lisp}{&optional}:
+\begin{minted}{Lisp}
+  (defun greet (name &optional (formally? t) (time-of-day "morning"))
+    (if formally?
+        (format t "Good ~a, ~a.~%" time-of-day name) 
+        (format t "What's up, ~a!~%" name)))
+
+  (greet "Mr. Holmes")
+  ;; Good morning, Mr. Holmes.
+  (greet "Mr. Cumberbatch" t "evening")
+  ;; Good evening, Mr. Cumberbatch.
+  (greet "Mike" nil)
+  ;; What's up, Mike!
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{$\lambda$-lists 3/4}
+  \begin{itemize}
+  \item \textbf{Keyword parameters} are optional parameters that are specified
+    in pairs $(name, value)$.
+  \item Keyword parameters can be specified out of order and selectively.
+  \item Common Lisp uses special type of symbols called ``keywords'' to specify
+    names for the optional parameters.
+  \item Keyword parameters are separated from the others in the $\lambda$-list
+    with the \mintinline{Lisp}{&key} symbol:
+\begin{minted}{Lisp}
+  (defun greet (name &key (formally? t) (time-of-day "morning"))
+    ...)
+
+  (greet "Mr. Holmes" :time-of-day "afternoon")
+  ;; Good afternoon, Mr. Holmes.
+  (greet "Mike" :formally? nil)
+  ;; What's up, Mike!
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{$\lambda$-lists 4/4}
+  \begin{itemize}
+  \item \textbf{Rest-parameter} declaration in a $\lambda$-list allows to
+    collect a variable number of arguments into a list.
+  \item Rest-argument includes any optional and keyword arguments that were
+    supplied to the function.
+  \item Rest-argument can be declared with the \mintinline{Lisp}{&rest} symbol:
+\begin{minted}{Lisp}
+  (defun f (zero &rest args &key key1 key2 &allow-other-keys)
+    (format t "zero: ~a, key1: ~a, key2: ~a~%" zero key1 key2)
+    (format t "rest: ~a~%" args))
+
+  (f 0 :key1 1 :key2 2 :key3 3 :key4 4)
+  ;; zero: 0, key1: 1, key2: 2
+  ;; rest: (:key1 1 :key2 2 :key3 3 :key4 4)
+\end{minted}
+  \item Allowed set of keyword arguments is limited by default, and must be
+    relaxed with the \mintinline{Lisp}{&allow-other-keys} symbol.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{$\lambda$-expressions (a.k.a. Anonymous Function)}
+  \begin{itemize}
+  \item \textbf{$\lambda$-expressions} are \textit{function literals} - then
+    denote the functions without giving them names.
+  \item Just regular function definitions, $\lambda$-expressions have two key
+    components - $\lambda$-list and body. Unlike regular function definitions,
+    $\lambda$-expressions do not have names.
+  \item Compare:
+\begin{minted}{Lisp}
+  CL-USER> (defun f (x) (* x 2))
+  f
+  CL-USER> (f 5)
+  10
+\end{minted}
+    and
+\begin{minted}{Lisp}
+  CL-USER> (lambda (x) (* x 2))
+  #<Interpreted Function (unnamed) @ #x10008c1dbc2>
+  CL-USER> ((lambda (x) (* x 2)) 5)
+  10
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functions as First-class Values 1/4}
+  \begin{itemize}
+  \item In programming languages, \textbf{first-class values} are values that
+    can be \textit{passed as arguments to functions} and \textit{returned from
+      functions as results}.
+  \item Functions are fundamental mathematical objects, so in order to be
+    ``functional'', programming language must consider functions
+    \textit{first-class values}.
+  \item Because Common Lisp is a Lisp-2, it needs a special operation to call
+    functions from namespace 1:
+\begin{minted}{Lisp}
+  CL-USER> (let ((doubler (lambda (x) (* x 2))))
+             (doubler 5))
+  ;; Error: attempt to call `doubler' which is an undefined function.
+  CL-USER> (let ((doubler (lambda (x) (* x 2))))
+             (funcall doubler 5))
+  10
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functions as First-class Values 2/4}
+  \begin{itemize}
+  \item \mintinline{Lisp}{funcall} applies the function to the arguments as if
+    its $\lambda$-list was the same as of the function being applied:
+\begin{minted}{Lisp}
+  CL-USER> (funcall #'+ 1 2 3 4)
+  10
+\end{minted}
+  \item Sometimes it is more convenient to apply the function to the arguments
+    collected into a list, which can be done with \mintinline{Lisp}{apply}:
+\begin{minted}{Lisp}
+  CL-USER> (apply #'+ '(1 2 3 4))
+  10
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functions as First-class Values 3/4}
+  \begin{itemize}
+  \item Passing functions as arguments:
+\begin{minted}{Lisp}
+  CL-USER> (defun twice (f x)
+             (funcall f (funcall f x))
+  twice
+  CL-USER> (twice (lamdba (x) (* x x)) 5)
+  125
+\end{minted}
+  \item Returning functions as results:
+\begin{minted}{Lisp}
+  CL-USER> (defun linear (a b)
+             (lambda (x) (+ (* a x) b)))
+  linear
+  CL-USER> (let ((2x+5 (linear 2 5)))
+             (funcall 2x+5 5))
+  15
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functions as First Class Values 4/4}
+  \begin{itemize}
+  \item Finally, having functions as first-class values allows to compose them
+    to build more complex functions:
+\begin{minted}{Lisp}
+  (defun timed (f)
+    (lambda (&rest args)
+      (let* ((start-time (get-universal-time))
+             (result (apply f args))
+             (end-time (get-universal-time)))
+        (format t "Elapsed time: ~a~%" (- end-time start-time))
+        result)))
+
+  (defun parser (string)
+    ...)
+
+  (funcall #'parser "<some string to be parsed>")
+
+  (funcall (timed #'parser) "<some string to be parsed>")
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Useful Resources}
+  \begin{itemize}
+  \item Common Lisp HyperSpec - publicly available alternative to ANSI Common
+    Lisp standard
+    \begin{itemize}
+    \item \scriptsize{http://www.lispworks.com/documentation/HyperSpec/Front/index.htm}
+    \end{itemize}
+  \item Design Patterns in Dynamic Languages - Peter Norvig, 1998
+    \begin{itemize}
+    \item \scriptsize{https://norvig.com/design-patterns}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The End}
+  \begin{center}
+    Thank you!
+  \end{center}
+\end{frame}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-command-extra-options: "-shell-escape"
+%%% End:
