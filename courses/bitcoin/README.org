@@ -1,0 +1,30 @@
+* Bitcoin and Cryptocurrency Technologies
+
+This is a root directory for the course materials for the "Bitcoin and
+Cryptocurrency Technologies" course.
+
+
+** Lectures
+
+Lecture slides:
+  - [[../l1-economics-and-history][Lecture 1 - Economics and History]]
+  - [[../l2-cryptography-basics][Lecture 2 - Cryptography Basics 1/2]]
+  - [[../l3-bitcoin-data-model][Lecture 3 - Bitcoin Data Model]]
+
+
+** Labs
+
+There are three labs in this course. The points for the labs are as follows:
+
+|-----+--------|
+| Lab | Points |
+|-----+--------|
+|   1 |     40 |
+|-----+--------|
+|   2 |     30 |
+|-----+--------|
+|   3 |     30 |
+|-----+--------|
+
+Lab tasks in English:
+  - [[./labs/lab1-english.org][Lab 1 - Running Your Own Bitcoin Node]]
