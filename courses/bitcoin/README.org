@@ -28,3 +28,6 @@ There are three labs in this course. The points for the labs are as follows:
 
 Lab tasks in English:
   - [[./labs/lab1-english.org][Lab 1 - Running Your Own Bitcoin Node]]
+
+Завдання для практичних робіт українською:
+  - [[./labs/lab1-ukrainian.org][Практична робота 1 - розгортання власної Біткоїн-ноди]]
