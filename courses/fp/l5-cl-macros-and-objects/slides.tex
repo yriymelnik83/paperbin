@@ -1,0 +1,394 @@
+\documentclass{beamer}
+
+\usepackage{amsmath}
+\usepackage[style=alphabetic,url=true]{biblatex}
+\usepackage{environ}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{calrsfs}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[cache=false]{minted}
+
+\graphicspath{ {./graphics/} }
+\usetikzlibrary{shapes.arrows,chains}
+\usecolortheme{beaver}
+\setbeamertemplate{itemize item}[circle]
+\setbeamertemplate{itemize subitem}{--}
+\addtobeamertemplate{navigation symbols}{}{
+  \usebeamerfont{footline}
+  \usebeamercolor[fg]{footline}
+  \hspace{1em}
+  \insertframenumber/\inserttotalframenumber
+}
+\setminted[Lisp]{
+  fontsize=\scriptsize
+}
+\BeforeBeginEnvironment{minted}{\medskip}
+\AfterEndEnvironment{minted}{\medskip}
+
+
+
+\title{
+  Common Lisp and Introduction to Functional Programming \\
+  Lecture 5: CLOS, MOP and Macros
+}
+\author{Yuri Zhykin}
+\date{Mar 11, 2021}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}[fragile]
+  \frametitle{Common Lisp Object System}
+  \begin{itemize}
+  \item \textbf{CLOS, Common Lisp Object System} originally was a ``plug-in''
+    object system for the Common Lisp language, implemented as a library.
+  \item Final version of CLOS is included in the ANSI Common Lisp standard and
+    well integrated into the language.
+  \item CLOS is inspired by the earlier Lisp object systems \textbf{MIT Flavors}
+    and \textbf{CommonLoops}.
+  \item CLOS is considered one of the most powerful and flexible object systems
+    in mainstream programming languages.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{CLOS entities}
+  \begin{itemize}
+  \item \textbf{Classes} and \textbf{Objects}.
+  \item \textbf{Generic Functions}.
+  \item \textbf{Methods}.
+  \item \textbf{Specializers}.
+  \item \textbf{Method Combinations}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Classes and Objects 1/2}
+  \begin{itemize}
+  \item Classes can be declared with the \mintinline{Lisp}{defclass} form:
+\begin{minted}{Lisp}
+  (defclass <class-name> (<superclass-1> <superclass-2> ...)
+    ((<slot-1> 
+      :accessor <class-slot-1>
+      :initarg  :slot-1
+      :initform <slot-1-initform>)
+     ...)
+    <options>)
+\end{minted}
+  \item Instances of classes (\textbf{objects}) can be created with:
+\begin{minted}{Lisp}
+  CL-USER> (make-instance <class-name-symbol>
+                          :slot-1 <slot-1-value> ...)
+  #<<class-name> :slot-1 <slot-1-value> ...>
+\end{minted}    
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Classes and Objects 2/3}
+  \begin{itemize}
+  \item Authenticator class hierarchy example:
+\begin{minted}{Lisp}
+  (defclass auth ()
+    ((user :accessor auth-user :initarg :user)))
+
+  (defclass secret-auth (auth)
+    ((secret :accessor auth-secret :initarg :secret)))
+
+  (defclass password-auth (secret-auth) ())
+
+  (defclass token-auth (secret-auth) ())
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Classes and Objects 3/3}
+  \begin{itemize}
+  \item CLOS classes support multiple inheritance.
+  \item Common Lisp provides another type of record entities - \textbf{structs}:
+\begin{minted}{Lisp}
+  CL-USER (defstruct point x y)
+  point
+  CL-USER> (make-point :x 1 :y 2)
+  #S(point :x 1 :y 2)
+  CL-USER> (point-x *)
+  1
+\end{minted}
+  \item Structs are also classes, but they are easier to use in some cases and
+    may have different internal representation.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Generic Functions}
+  \begin{itemize}
+  \item \textbf{Generic function} is an object that consists of a set of all
+    \textbf{methods} that have the same symbolic name.
+  \item \textit{Generic function declarations} are used to fix the
+    \textit{contracts} (\textit{signatures}) of its methods and to store
+    documentation.
+  \item For example:
+\begin{minted}{Lisp}
+  (defgeneric authenticate (auth)
+    (:documentation "Authenticate the user with the given AUTH."))
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Methods}
+  \begin{itemize}
+  \item \textbf{Methods} are functions that implement a generic function for a
+    particular set of arguments.
+  \item Methods are added to the method set of a generic function with the same
+    name.
+  \item If generic function with a given name does not exist, it is created
+    automatically.
+  \item Example:
+\begin{minted}{Lisp}
+  (defmethod authenticate ((auth auth))
+    nil)
+
+  (defmethod print-object ((auth secret-auth) stream)
+    (format stream "#<SECRET-AUTH(~a)>" (auth-user auth)))
+
+  (defmethod authenticate ((auth password-auth))
+    (when (equal (sha512 (auth-secret auth)) <stored-pw-hash>)
+      ...))
+
+\end{minted}    
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Specializers}
+  \begin{itemize}
+  \item \textit{Applicability} of methods is defined by \textbf{specializers} -
+    entities that describe a property of an argument that is sufficient to match
+    a given method.
+  \item Current Common Lisp standard defines two types of specializers
+    \begin{itemize}
+    \item \textbf{type} - class/inheritance tree of the object is used,
+    \item \textbf{eql} - object is tested for equality with a given specializer.
+    \end{itemize}
+  \item Example of \mintinline{Lisp}{eql}-specializer:
+\begin{minted}{Lisp}
+  (defmethod authenticate ((auth (eql :dummy-auth)))
+    t)
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Method combinations 1/2}
+  \begin{itemize}
+  \item \textbf{Method combinations} allow to define how \textit{all} applicable
+    methods will be combined into an \textbf{effective method}.
+  \item \textbf{Standard method combination} defines the notions of
+    \textbf{primary method} and \textbf{auxiliary methods}.
+  \item Auxiliary methods can be of the following types:
+    \begin{itemize}
+    \item \textbf{before} - called before primary method; result discarded,
+    \item \textbf{after} - called after primary method; result discarded,
+    \item \textbf{around} - called around before/primary/after method.
+    \end{itemize}
+  \item \mintinline{Lisp}{:around}-methods must call
+    \mintinline{Lisp}{call-next-method} function or otherwise method call
+    sequence will be terminated.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Method combinations 2/2}
+  \begin{itemize}
+  \item Standard method combination example:
+\begin{minted}{Lisp}
+  (defmethod authenticate :before ((auth token-auth))
+    (load-token-storage))
+
+  (defmethod authenticate :after ((auth token-auth))
+    (unload-token-storage))
+
+  ;; Alternatively:
+  (defmethod authenticate :around ((auth token-auth))
+    (load-token-storage)
+    (prog1
+      (call-next-method)
+      (unload-token-storage)))
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Metaobject Protocol}
+  \begin{itemize}
+  \item \textbf{Metaobject} is an object that manipulates, creates, describes,
+    or implements objects (including itself).
+  \item \textbf{Metaobject protocol} is an object-based model that consists of
+    \textit{metaobjects} and allows to manipulate the structure and behaviour of
+    an object system:
+    \begin{itemize}
+    \item create or delete new classes,
+    \item create new generic functions and methods,
+    \item define class slot access,
+    \item manipulate class inheritance relations,
+    \item manipulate the \textbf{effective method} computation.
+    \end{itemize}
+  \item Metaobject protocol can be used to create an additional object system
+    that better fits the domain of the software.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Class Precedence Lists}
+  \begin{itemize}
+  \item Some of the MOP utilities are available in standard Common Lisp but most
+    of MOP is usually available as an additional package:
+\begin{minted}{Lisp}
+  CL-USER> (find-class 'password-auth)
+  #<standard-class password-auth>
+\end{minted}
+  \item One of the most important MOP concepts is \textbf{class precedence
+      list}:
+\begin{minted}{Lisp}
+  CL-USER> (mop:class-precedence-list *)
+  (#<standard-class password-auth> #<standard-class secret-auth>
+   #<standard-class auth> #<standard-class standard-object>
+   #<built-in-class t>)
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Effective Methods}
+  \begin{itemize}
+  \item \textit{Class precedence lists} are used when computing
+    \textbf{effective methods}.
+  \item \textbf{Effective method} is a function that is actually called when a
+    generic function is called.    
+  \item \textit{Effective method} is a \textit{closure} that combines a subset
+    of \textit{applicable methods} based on \textit{class precedence} and
+    \textit{method combinations}:
+\begin{minted}{Lisp}
+  (lambda (&rest args)
+    (if <around-methods-exists-p>
+        <call-around-methods> ;; calls before/primary/after-methods
+        (progn
+          <call-before-method>
+          <call-primary-methods>
+          <call-after-method>))
+\end{minted}    
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Macros}
+  \begin{itemize}
+  \item \textbf{Macros} are special forms that expand into actual Lisp forms
+    during compilation.
+  \item Powerful macro system allows to extend the syntax of the language with
+    the new special forms and control structures.
+  \item More primitive languages (e.g. \textit{C}) use macros that generate
+    text via simple textual substitutions.
+  \item Lisp macros generate Lisp forms represented as data structures (lists),
+    and any Lisp code can be executed when computing the macro expansion.
+  \item \textbf{Common Lisp macros are Common Lisp functions that are called
+      during compilations and return Common Lisp code represented as trees that
+      will be further compiled.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Read/Compile/Load/Evaluate Phases}
+  \begin{itemize}
+  \item \textbf{Read} phase reads \textit{textual} representation of Lisp and
+    returns a tree representation for each \textit{top-level} form.
+  \item \textbf{Compile} phase recursively expands macros until there is nothing
+    to expand and compiles the result Lisp code.
+  \item \textbf{Load} phase loads the compiled Lisp code (usually in the form of
+    \mintinline{Lisp}{*.fasl} files into the running Lisp executing all
+    top-level forms.
+  \item \textbf{Execute} phase is started when a Lisp form is invoked within a
+    Lisp system (e.g. from REPL).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Lisp Code that Returns Lisp Code 1/2}
+  \begin{itemize}
+  \item Simplest Lisp macros can simply construct and return lists that
+    represent the resulting expansion:
+\begin{minted}{Lisp}
+  (defmacro %when (condition &body true-body)
+    (list 'if condition (cons 'progn true-body) nil))
+
+  CL-USER> (macroexpand '(%when t (print "true") t))
+  (if t (progn (print "true") t) nil)
+  t
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Lisp Code that Returns Lisp Code 2/2}
+  \begin{itemize}
+  \item More concise way to construct Lisp forms is to use the
+    \textbf{quasi-quote}:
+\begin{minted}{Lisp}
+  (defmacro %when (condition &body true-body)
+    `(if ,condition 
+         (progn ,@true-body)
+         nil))
+
+  CL-USER> (macroexpand '(%when t (print "true") t))
+  (if t (progn (print "true") t) nil)
+  t
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Why Macros?}
+  \begin{itemize}
+  \item Can the \mintinline{Lisp}{if}-form be implemented as a function?
+\begin{minted}{Lisp}
+  (if (some-condition-p)
+      (print "true")
+      (print "false")
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Useful Resources}
+  \begin{itemize}
+  \item \textbf{The Art of the Metaobject Protocol} by Daniel G. Bobrow and
+    Gregor Kiczales - one of the best OOP books out there
+  \item \textbf{Let Over Lambda} by Doug Hoyte - great book on macro programming
+    in Common Lisp
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The End}
+  \begin{center}
+    Thank you!
+  \end{center}
+\end{frame}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-command-extra-options: "-shell-escape"
+%%% End:
