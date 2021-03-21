@@ -7,10 +7,11 @@ Cryptocurrency Technologies" course.
 ** Lectures
 
 Lecture slides:
-  - [[../l1-economics-and-history][Lecture 1 - Economics and History]]
-  - [[../l2-cryptography-basics-1][Lecture 2 - Cryptography Basics 1/2]]
-  - [[../l3-bitcoin-data-model][Lecture 3 - Bitcoin Data Model]]
-  - [[./l4-cryptography-basics-2][Lecture 4 - Cryptography Basics 2/2]]
+  - [[file:l1-economics-and-history/slides.pdf][Lecture 1 - Economics and History]]
+  - [[file:l2-cryptography-basics-1/slides.pdf][Lecture 2 - Cryptography Basics 1/2]]
+  - [[file:l3-bitcoin-data-model/slides.pdf][Lecture 3 - Bitcoin Data Model]]
+  - [[file:l4-cryptography-basics-2/slides.pdf][Lecture 4 - Cryptography Basics 2/2]]
+  - [[file:l5-bitcoin-transactions/slides.pdf][Lecture 5 - Bitcoin Transactions]]
 
 
 ** Labs
