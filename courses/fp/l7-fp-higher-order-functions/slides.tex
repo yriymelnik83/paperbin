@@ -1,0 +1,348 @@
+\documentclass{beamer}
+
+\usepackage{amsmath}
+\usepackage[style=alphabetic,url=true]{biblatex}
+\usepackage{environ}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{calrsfs}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[cache=false]{minted}
+
+\graphicspath{ {./graphics/} }
+\usetikzlibrary{shapes.arrows,chains}
+\usecolortheme{beaver}
+\setbeamertemplate{itemize item}[circle]
+\setbeamertemplate{itemize subitem}{--}
+\addtobeamertemplate{navigation symbols}{}{
+  \usebeamerfont{footline}
+  \usebeamercolor[fg]{footline}
+  \hspace{1em}
+  \insertframenumber/\inserttotalframenumber
+}
+\setminted[Lisp]{
+  fontsize=\scriptsize
+}
+\BeforeBeginEnvironment{minted}{\medskip}
+\AfterEndEnvironment{minted}{\medskip}
+
+
+
+\title{
+  Common Lisp and Introduction to Functional Programming \\
+  Lecture 7: Higher-order Functions
+}
+\author{Yuri Zhykin}
+\date{Mar 25, 2021}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}[fragile]
+  \frametitle{So What Is Functional Programming? 1/3}
+  \begin{itemize}
+  \item \textbf{Procedural programming} is an \textbf{imperative} programming
+    paradigm in which ``procedure'' definitions a sequence of imperative
+    statements which update the \textbf{state} of the program.
+  \item \textbf{Functional programming} is a \textbf{declarative} programming
+    paradigm in which ``function'' definitions are \textbf{trees of expressions}
+    that map values to other values.
+  \item \textbf{Functional programming} is a programming paradigm where programs
+    are constructed by \textbf{applying} and \textbf{composing} functions.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{So What Is Functional Programming? 2/3}
+  \begin{itemize}
+  \item Functional programming approach builds software by composing
+    \textbf{pure functions}, avoiding \textbf{shared state}, \textbf{mutable
+      data}, and \textbf{side-effects}.
+  \item Program state is not modified explicitly but rather ``flows'' through
+    function calls.
+  \item Functional program can be a single expression consisting of a large
+    number of function invocations.
+  \item State is passed as arguments to functions-components of the program
+    expression and returned as results, which become arguments to other
+    functions-components.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{So What Is Functional Programming? 3/3}
+  \begin{itemize}
+  \item Example of a functional ``data pipeline'':
+\begin{minted}{Lisp}
+  (defun collect-data (sources)
+    "Returns raw data."
+    ...)
+
+  (defun process-data (data)
+    "Processes raw data and returns results."
+    ...)
+
+  (defun analyse-results (results)
+    "Analyses results and returns analysis data."
+    ...)
+
+  (defun show-analysis (analysis)
+    "Prints analysis data to standard output."
+    ...)
+
+  (defun main ()
+    (let ((sources (list <source1> <source2> ...)))
+      (show-analysis 
+       (analyse-results (process-data (collect-data sources))))))
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{First-class Functions}
+  \begin{itemize}
+  \item A programming language is said to have \textbf{first-class functions} if
+    it treats functions as \textbf{first-class values}.
+  \item \textbf{First-class values} or language's \textbf{first-class citizens}
+    are values that can be
+    \begin{itemize}
+    \item passed as arguments to functions,
+    \item returned as results from functions,
+    \item assigned to variables,
+    \item stored in data structures.
+    \end{itemize}
+  \item \textbf{First-class functions enable passing behaviour as arguments to
+      functions.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher-order Functions 1/2}
+  \begin{itemize}
+  \item \textbf{Higher-order function} (a.k.a., \textbf{Operator} or
+    \textbf{Functional} in mathematics) is a function that takes one or more
+    functions as arguments or returns a function as its result.
+  \item Functions that neither take functions as parameters nor return functions
+    as results, are called \textbf{first-order functions}.
+  \item Higher-order functions are necessary in order to have first-class
+    functions.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Higher-order Functions 2/2}
+  \begin{itemize}
+  \item \textbf{Differential operator} is a common example of higher-order
+    functions: it takes function as an argument and maps it to its derivative,
+    which is also a function
+    $$\dfrac{d}{dx} f(x) = f'(x)$$
+  \item Common Lisp's \mintinline{Lisp}{funcall} and \mintinline{Lisp}{apply}
+    are also higher-order functions, since they take functions as their first
+    argument:
+\begin{minted}{Lisp}
+  CL-USER> (funcall (lambda (x) (* x 2)) 5)
+  10
+  CL-USER> (apply #'+ '(1 2 3 4 5))
+  15
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functional Composition 1/2}
+  \begin{itemize}
+  \item Main role of functions, similar to procedures in procedural programming,
+    is to group computations into units that have a clearly defined common goal
+    and dependencies - arguments.
+  \item In order to construct programs, one must be able to \textbf{apply} and
+    \textbf{compose} functions.
+  \item Common Lisp provides operators for applying functions
+    (\mintinline{Lisp}{funcall}, \mintinline{Lisp}{apply}), while composing is
+    trivially done via nested expressions:
+\begin{minted}{Lisp}
+  (f1 (f2 a1 a2) (f3 (f4 a3)))
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functional Composition 2/2}
+  \begin{itemize}
+  \item \textbf{Function composition operator} is a binary operator that takes
+    two functions $f$ and $g$ and returns a function $h$ such that
+    $h(x) = f(g(x))$:
+\begin{minted}{Lisp}
+  (defun compose (&rest fs)
+    (if (null fs)
+        (lambda (x) x)
+        (lambda (x) 
+          (funcall (car fs) (funcall (apply #'compose (cdr fs)) x)))))
+\end{minted}
+  \item Function composition operator enables very elegant style of programming
+    called \textbf{tacit style} or \textbf{point-free style}, in which function
+    definitions do not identify their arguments:
+\begin{minted}{Lisp}
+  (defun main ()
+    (apply (compose #'show-analysis
+                    #'analyse-results
+                    #'process-data
+                    #'collect-data)
+           (list <source1> <source2> ...)))
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+% \begin{frame}[fragile]
+%   \frametitle{Currying and Partial Application}
+%   \begin{itemize}
+%   \item \textbf{Currying} is the technique of converting a function that takes
+%     multiple arguments into a sequence of functions that each take a single
+%     argument:
+%     $$f(x, y, z) \rightarrow \begin{cases}
+%       h = &g(x) \\
+%       i = &h(y) \\
+%       f = &i(z) \\
+%     \end{cases}$$
+%     $$f(x, y, z) = g(x)(y)(z)$$
+%   \item \textbf{Currying} transforms a function of multiple arguments into a set
+%     of functions of a single argument, and can be used practically for
+%     constructing new functions and theoretically for simplified analysis of
+%     functions:
+% \begin{minted}{Lisp}
+%   (defun curry (f x)
+%     (lambda (y) (funcall f x y)))
+  
+%   (funcall (curry (curry #'+ 1) 2) 3)
+% \end{minted}
+%   \end{itemize}
+% \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Map, Reduce and Filter}
+  \begin{itemize}
+  \item \textbf{Recursive operators} \mintinline{Lisp}{Map},
+    \mintinline{Lisp}{Filter} and \mintinline{Lisp}{Reduce} are higher-order
+    functions that take an recursively defined object and a function, and apply
+    that function along the structure of the object.
+  \item Common Lisp provides standard functions \mintinline{Lisp}{mapcar},
+    \mintinline{Lisp}{remove-if-not} and \mintinline{Lisp}{reduce} that operate
+    on lists.
+  \item Similar functions that operate on sequences are available in most modern
+    programming languages (Java Script, Python, Java, etc).
+  \item Just using these three operators may be enough for most sequence
+    processing tasks.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Map, Filter and Reduce: Map}
+  \begin{itemize}
+  \item Function \mintinline{Lisp}{Map} takes a function $f: A \mapsto B$ and a
+    list $A$ and \textbf{returns a new list $B$} such that
+    $$\forall a_i \in A, b_i \in B: b_i = f(a_i)$$
+  \item Example:
+\begin{minted}{Lisp}
+  CL-USER> (mapcar (lambda (x) (* x x)) '(1 2 3 4 5))
+  (1 4 9 16 25)
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Map, Filter and Reduce: Filter}
+  \begin{itemize}
+  \item Function \mintinline{Lisp}{filter} takes a function
+    $f: A \mapsto \{True, False\}$ and a List $A$ and \textbf{returns a new list
+      $B$} such that
+    $$\forall a_i \in A: a_i \in B \iff f(a_i) = True$$
+  \item Example:
+\begin{minted}{Lisp}
+  CL-USER> (remove-if-not #'evenp '(1 2 3 4 5))
+  (2 4)
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Map, Filter and Reduce: Reduce}
+  \begin{itemize}
+  \item Function \mintinline{Lisp}{reduce} takes a function
+    $f: B \times A \mapsto B$, a list $A = {a_1, a_2, ..., a_k}$ and an initial
+    value $b_0$ and \textbf{returns a value $b_k$} where
+    $$b_i = f(b_{i-1}, a_i), i=1,2,...,k$$
+  \item Example:
+\begin{minted}{Lisp}
+  CL-USER> (reduce #'+ '(1 2 3 4 5) :initial-value 0)
+  15
+  CL-USER> (+ (+ (+ (+ (+ 0 1) 2) 3) 4) 5)
+  15
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Combining Map, Filter and Reduce 1/2}
+  \begin{itemize}
+  \item Typical data pipeline with \mintinline{Lisp}{Map},
+    \mintinline{Lisp}{Filter} and \mintinline{Lisp}{Reduce} looks like this:
+\begin{minted}{Lisp}
+  ;; (aggregate (transform (select (collect ...))))
+  (reduce (lambda (x y) ...)
+          (mapcar (lambda (x) ...)
+                  (remove-if-not (lambda (x) ...)
+                                 (collect ...))))
+\end{minted}
+  \item This general pattern fits large number of use cases and sequence
+    processing problems and can be applied almost identically in most of modern
+    programming languages.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Combining Map, Filter and Reduce 2/2}
+  \begin{itemize}
+  \item Example:
+\begin{minted}{Lisp}
+  (flet (;; Return a number of exported functions for a package.
+         (count-exported-functions (p)
+           (let ((fcount 0))
+             (do-external-symbols (s p) 
+               (when (fboundp s) (incf fcount)))
+             fcount))
+
+         ;; Check if a package is an SBCL-supplied one.
+         (sbcl-package-p (p)
+           (let ((index (search "SB-" (package-name p))))
+             (and index (zerop index)))))
+
+    ;; Collect, filter, process and aggregate data.
+    (reduce 
+     #'+ 
+     (mapcar #'count-exported-functions
+             (remove-if-not #'sbcl-package-p (list-all-packages)))
+     :initial-value 0))
+\end{minted}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The End}
+  \begin{center}
+    Thank you!
+  \end{center}
+\end{frame}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-command-extra-options: "-shell-escape"
+%%% End:
