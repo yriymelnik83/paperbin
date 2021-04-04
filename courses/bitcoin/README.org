@@ -12,6 +12,7 @@ Lecture slides:
   - [[file:l3-bitcoin-data-model/slides.pdf][Lecture 3 - Bitcoin Data Model]]
   - [[file:l4-cryptography-basics-2/slides.pdf][Lecture 4 - Cryptography Basics 2/2]]
   - [[file:l5-bitcoin-transactions/slides.pdf][Lecture 5 - Bitcoin Transactions]]
+  - [[file:l6-bitcoin-network/slides.pdf][Lecture 6 - Bitcoin Network]]
 
 
 ** Labs
