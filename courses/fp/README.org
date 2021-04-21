@@ -1,0 +1,37 @@
+* Common Lisp and Intoduction to Functional Programming
+
+This is a root directory for the course materials for the "Common Lisp and
+Intoduction to Functional Programming" course.
+
+** Lectures
+
+Lecture slides:
+  - [[file:l1-introduction/slides.pdf][Lecture 1 - Introduction]]
+  - [[file:l2-cl-basics/slides.pdf][Lecture 2 - Common Lips Basics]]
+  - [[file:l3-cl-functions/slides.pdf][Lecture 3 - Common Lisp Functions]]
+  - [[file:l4-cl-state-and-control-flow/slides.pdf][Lecture 4 - Common Lips State and Control Flow]]
+  - [[file:l5-cl-macros-and-objects/slides.pdf][Lecture 5 - Common Lisp Macros and Objects]]
+  - [[file:l6-fp-basics/slides.pdf][Lecture 6 - Functional Programming Basics]]
+  - [[file:l7-fp-higher-order-functions/slides.pdf][Lecture 7 - Higher-order Functions]]
+  - [[file:l8-fp-functional-data-structures-1/slides.pdf][Lecture 8 - Functional Data Structures 1/2]]
+  - [[file:l9-fp-functional-data-structures-2/slides.pdf][Lecture 9 - Functional Data Structures 2/2]]    
+
+** Labs
+
+There are four labs in this course. The points for the labs are as follows:
+
+|-----+--------|
+| Lab | Points |
+|-----+--------|
+|   1 |     25 |
+|-----+--------|
+|   2 |     25 |
+|-----+--------|
+|   3 |     25 |
+|-----+--------|
+|   4 |     25 |
+|-----+--------|
+
+Завдання для практичних робіт українською:
+  - [[file:labs/lab1/task.org][Практична робота 1 - підготовка CL-середовища]]
+  - [[file:labs/lab2/task.md][Практична робота 2 - рекурсивні оператори Map, Filter та Reduce]]
