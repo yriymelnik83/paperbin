@@ -13,6 +13,8 @@ Lecture slides:
   - [[file:l4-cryptography-basics-2/slides.pdf][Lecture 4 - Cryptography Basics 2/2]]
   - [[file:l5-bitcoin-transactions/slides.pdf][Lecture 5 - Bitcoin Transactions]]
   - [[file:l6-bitcoin-network/slides.pdf][Lecture 6 - Bitcoin Network]]
+  - [[file:l7-bitcoin-protocol/slides.pdf][Lecture 7 - Bitcoin Protocol]]
+  - [[file:l8-bitcoin-wallet-software/slides.pdf][Lecture 8 - Bitcoin Wallet Software]]
 
 
 ** Labs
